@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+    <title>Meal Plan Progress</title>
+</head>
+
+<body>
+    <div class="col-md-8 offset-md-2">
+        <h3 class="mt-3">Meal Plan Progress</h3>
+        <div class="card my-3">
+            <div class="card-body">
+                <!-- <h5 class="card-title"></h5> -->
+                <form id="form">
+                    <label class="form-label" for="plan">Meal Plan</label>
+                    <select id="plan" class="form-select mb-2">
+                        <option value="225 Flex">225 Flex</option>
+                        <option value="175 Flex" selected>175 Flex</option>
+                        <option value="120 Flex">120 Flex</option>
+                        <option value="95 Flex">95 Flex</option>
+                        <option value="50 Flex">50 Flex</option>
+                    </select>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6"> <label for="start-date">Semester Start</label>
+                            <input id="start-date" class="form-control" type="date" />
+                        </div>
+                        <div class="col-md-6"> <label for="end-date">Semester End</label>
+                            <input id="end-date" class="form-control" type="date" />
+                        </div>
+                    </div>
+
+
+                    <label class="form-label" for="dollars">Dining Dollars Left</label>
+                    <input class="form-control mb-2" type="dec" id="dollars" step=".01">
+                    <label class="form-label" for="swipes">Meal Swipes Left</label>
+                    <input class="form-control mb-2" type="number" id="swipes">
+                    <button class="btn btn-primary mt-2">Analyze</button>
+                </form>
+            </div>
+        </div>
+
+        <div style="opacity: 0;" id="results">
+            <div>
+                <div class="text-muted fw-bold mt-3">
+                    <p>Dining Dollars Used</p>
+                    <div class="progress">
+                        <div id="dollars_progress" class="progress-bar" role="progressbar" style="width: 0%;">0%</div>
+                    </div>
+                </div>
+                <div class="text-muted fw-bold mt-3">
+                    <p>Meal Swipes Used</p>
+                    <div class="progress">
+                        <div id="swipes_progress" class="progress-bar" role="progressbar" style="width: 0%;">0%</div>
+                    </div>
+                </div>
+                <div class="text-muted fw-bold mt-3">
+                    <p>Semester Progress</p>
+                    <div class="progress">
+                        <div id="semester_progress" class="progress-bar" role="progressbar" style="width: 0%;">0%</div>
+                    </div>
+                </div>
+                <div class="text-muted fw-bold mt-3">
+                    <div>
+                        Meal Swipes Per Week Used: <span id="swipes-week-used"></span>
+                    </div>
+                    <div>
+                        Dining Dollars Per Week Used: $<span id="dollars-week-used"></span>
+                    </div>
+                </div>
+                <div class="text-muted fw-bold mt-3">
+                    <div>
+                        Meal Swipes Per Week Left: <span id="swipes-week-left"></span>
+                    </div>
+                    <div>
+                        Dining Dollars Per Week Left: $<span id="dollars-week-left"></span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+</body>
+<script>
+    date = new Date(1724558400000).toISOString().substring(0, 10);
+    start_input = document.querySelector('#start-date');
+    start_input.value = date;
+
+    date = new Date(1734670800000).toISOString().substring(0, 10);
+    end_input = document.querySelector('#end-date');
+    end_input.value = date;
+
+    plans = {
+        "225 Flex": { dollars: 300, swipes: 225 },
+        "175 Flex": { dollars: 500, swipes: 175 },
+        "120 Flex": { dollars: 450, swipes: 120 },
+        "95 Flex": { dollars: 200, swipes: 95 },
+        "50 Flex": { dollars: 425, swipes: 50 }
+    }
+
+    document.querySelector("#form").addEventListener("submit", (e) => {
+        e.preventDefault()
+
+        plan = document.querySelector("#plan").value
+
+        const TOTAL_DOLLARS = plans[plan].dollars
+        const TOTAL_SWIPES = plans[plan].swipes
+
+        const START_DATE = new Date(document.querySelector('#start-date').value)
+        const END_DATE = new Date(document.querySelector('#end-date').value)
+
+        console.log(START_DATE)
+
+
+        document.querySelector("#results").style.opacity = "100%"
+
+        days_in = (new Date() - START_DATE) / (24 * 60 * 60 * 1000)
+        total_days = (END_DATE - START_DATE) / (24 * 60 * 60 * 1000)
+
+        meal_swipes = document.querySelector("#swipes").value
+        dining_dollars = document.querySelector("#dollars").value
+
+        setProgress(document.querySelector("#dollars_progress"), (1 - dining_dollars / TOTAL_DOLLARS))
+        setProgress(document.querySelector("#swipes_progress"), (1 - meal_swipes / TOTAL_SWIPES))
+        setProgress(document.querySelector("#semester_progress"), days_in / total_days)
+
+        document.querySelector("#dollars-week-used").innerText = Math.round((TOTAL_DOLLARS - dining_dollars) / (days_in / 7))
+        document.querySelector("#swipes-week-used").innerText = Math.round((TOTAL_SWIPES - meal_swipes) / (days_in / 7))
+
+        document.querySelector("#dollars-week-left").innerText = Math.round((dining_dollars) / ((total_days - days_in) / 7))
+        document.querySelector("#swipes-week-left").innerText = Math.round((meal_swipes) / ((total_days - days_in) / 7))
+
+
+        // alert(meal_swipes + " " + dining_dollars)
+    })
+
+    setProgress = (el, prog) => {
+        prog = Math.round(100 * prog)
+        el.style.width = prog + "%"
+        el.innerText = prog + "%"
+    }
+</script>
+
+</html>
